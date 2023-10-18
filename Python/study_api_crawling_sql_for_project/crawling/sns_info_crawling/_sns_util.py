@@ -337,16 +337,14 @@ def get_int(data : str):
     
     ## return int data
     '''
-    if data == None:
-        return None
-    if data == '없음':
-        return None
-    if data == '':
+    if (data == None) or (data == '없음') or (data == ''):
         return None
     if (data[-1] == 'K') or (data[-1] == '천'):
         return int(float(data[:-1]) * 1000)
-    if (data[-1] == 'M') or (data[-1] == '만'):
+    if data[-1] == '만':
         return int(float(data[:-1]) * 10000)
+    if data[-1] == 'M':
+        return int(float(data[:-1]) * 1000000)
     if (data[-1] == 'B'):
         return int(float(data[:-1]) * 1000000000)
     return int(data)
