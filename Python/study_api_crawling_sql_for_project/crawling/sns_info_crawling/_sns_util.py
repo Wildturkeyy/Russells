@@ -29,6 +29,14 @@ tiktok_url_list = pd.read_excel('./crawling/src/tiktok_url_list.xlsx', usecols=[
 
 today = datetime.datetime.today().strftime('%Y%m%d')
 
+# key_df = pd.read_excel('../src/디지털홍보매체키워드.xlsx', usecols=['kd_keyword', 'category'])
+# keyword_list = key_df['kd_keyword'].to_list()
+# loc_df = pd.read_excel('../src/지역필터_230829.xlsx')
+# loc_list = loc_df['도시명'].to_list()
+
+# # tiktok_url 파일
+# tiktok_url_list = pd.read_excel('../src/tiktok_url_list.xlsx', usecols=['tiktok_url'])['tiktok_url'].to_list()
+
 ################################################################################################################
 
 '''
@@ -337,16 +345,14 @@ def get_int(data : str):
     
     ## return int data
     '''
-    if data == None:
-        return None
-    if data == '없음':
-        return None
-    if data == '':
+    if (data == None) or (data == '없음') or (data == ''):
         return None
     if (data[-1] == 'K') or (data[-1] == '천'):
         return int(float(data[:-1]) * 1000)
-    if (data[-1] == 'M') or (data[-1] == '만'):
+    if data[-1] == '만':
         return int(float(data[:-1]) * 10000)
+    if data[-1] == 'M':
+        return int(float(data[:-1]) * 1000000)
     if (data[-1] == 'B'):
         return int(float(data[:-1]) * 1000000000)
     return int(data)
@@ -416,11 +422,15 @@ def convert_tiktok_all_data(df : pd.DataFrame):
          
     ## return 변경된 df
     '''
-    df.columns = ['channeltype', 'category', 'area', 'channelid', 'channelname', 'channelurl', 'follower', 'like', 'description', "view", "postdate", "view1", "view2", "view3", "view4", "view5", "like1", "like2", "like3", "like4", "like5", "contents1", "contents2", "contents3", "contents4", "contents5", "extra", "imageurl", "contact"]
-    df['postdate'] = df['postdate'].apply(convert_date)
-    df['check'] = df['postdate'].apply(lambda x: 'N' if x > 60 else 'Y')
-    df['follower'] = df['follower'].apply(get_int)
-    df['like'] = df['like'].apply(get_int)
+    mc_view = [f'mc_view{i}' for i in range(1, 6)]
+    mc_like = [f'mc_like{i}' for i in range(1, 6)]
+    mc_comments = [f'mc_comments{i}' for i in range(1, 6)]
+    mc_contents = [f'mc_contents{i}' for i in range(1, 6)]
+    df.columns = ['mc_channeltype', 'mc_category', 'mc_area', 'mc_channelid', 'mc_channelname', 'mc_channelurl', 'mc_following', 'mc_follower', 'mc_like', 'mc_description', "mc_view", "mc_postdate"] + mc_view + mc_like + mc_comments + mc_contents + ["mc_extra", "mc_imageurl", "mc_contact"]
+    df['mc_postdate'] = df['mc_postdate'].apply(convert_date)
+    df['mc_check'] = df['mc_postdate'].apply(lambda x: 'N' if x > 60 else 'Y')
+    df['mc_follower'] = df['mc_follower'].apply(get_int)
+    df['mc_like'] = df['mc_like'].apply(get_int)
     return df
 
 '''
@@ -433,7 +443,11 @@ def convert_tiktok_data(df : pd.DataFrame):
          
     ## return 변경된 df
     '''
-    df.columns = ['channelid', 'postdate', 'view1', 'view2', 'view3', 'view4', 'view5', 'like1', 'like2', 'like3', 'like4', 'like5', 'contents1', 'contents2', 'contents3', 'contents4', 'contents5', 'delCheck']
-    df['postdate'] = df['postdate'].apply(convert_date)
-    df['postdate'] = df['postdate'].apply(lambda x: 'N' if x > 60 else 'Y')
+    mc_view = [f'mc_view{i}' for i in range(1, 6)]
+    mc_like = [f'mc_like{i}' for i in range(1, 6)]
+    mc_comments = [f'mc_comments{i}' for i in range(1, 6)]
+    mc_contents = [f'mc_contents{i}' for i in range(1, 6)]
+    df.columns = ['mc_channelid', 'mc_postdate', 'mc_following', 'mc_follower'] + mc_view + mc_like + mc_comments + mc_contents + ['mc_delCheck']
+    df['mc_postdate'] = df['mc_postdate'].apply(convert_date)
+    df['mc_postdate'] = df['mc_postdate'].apply(lambda x: 'N' if x > 60 else 'Y')
     return df
