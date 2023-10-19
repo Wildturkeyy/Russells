@@ -27,15 +27,13 @@ try:
     # tiktok 계정에 post count를 세기 위한 driver
     # driver = start_driver('https://www.google.com', debugging=True, headless=False)
     '''
-    cnt = 0
     for tk_idx, tiktok_url in enumerate(tiktok_url_list):
-        if cnt > 3: break
-        cnt += 1
+        if tk_idx > 3: break
         # tiktok_url로 받은 형식이 channelid 인지 url 형식인지 판단하고 channelid일 경우 url로 변경
         if "www.tiktok.com" not in tiktok_url:
             tiktok_url = "https://www.tiktok.com/@" + tiktok_url
             
-        view_list, likes_list, post_url_list, cnt = [], [], [], 0
+        view_list, likes_list, comments_list, post_url_list, cnt = [], [], [], [], 0
         try:
             # channelid가 나오면 정상적으로 request함 / channelid가 정상적으로 나오지 않으면 다시 requests 시도
             channelid, mc_check = None, False
@@ -88,6 +86,7 @@ try:
             bio_list = []
             username = soup.find('h2').get_text()
             img_url = soup.select_one('span > img', {'shape':'circle'}).attrs['src']
+            following = soup.find('strong', {'data-e2e':'following-count'}).get_text()
             follower = soup.find('strong', {'data-e2e':'followers-count'}).get_text()
             sns_likes = soup.find('strong', {'data-e2e':'likes-count'}).get_text()
             bio = soup.find('h2', {'data-e2e':'user-bio'}).get_text()
@@ -102,19 +101,22 @@ try:
             except: pass
             
             views = soup.find_all('strong', {'data-e2e':'video-views'})
+            
+            # 게시글 url list
             url_code_list = tiktok_text.split('"user-post"')[-1].split('"browserList"')[0].split(':')[-1][1:-2].split(',')
             for i, url_code in enumerate(url_code_list):
                 post_url = tiktok_url +'/video/' + url_code[1:-1]
                 
-                # post_url 제대
+                # 10번을 requests시도했는데도 post data를 가져오지 못하면 다음 게시글을 가져와서 cnt += 1
                 for _ in range(10):
                     post_soup = get_soup(post_url)
                     try:
                         if cnt == 0:
                             uploaded_date = post_soup.find('span', {'data-e2e':'browser-nickname'}).find_all('span')[-1].get_text()
                         likes = post_soup.find('strong', {'data-e2e':'like-count'}).get_text().strip()
+                        comments_cnt =post_soup.find('p', {'class':'e1a7v7ak1'}).get_text().split()[0]
                         likes_list.append(likes)
-                        # view = views[i].get_text()
+                        comments_list.append(comments_cnt)
                         view_list.append(views[i].get_text())
                         post_url_list.append(post_url)
                         cnt += 1
@@ -123,12 +125,17 @@ try:
                         continue
                 if cnt == 6:
                     break
-                
+            
+            # int로 변경
             views_int = list(pd.DataFrame(view_list)[0].apply(get_int))
             likes_int = list(pd.DataFrame(likes_list)[0].apply(get_int))
+            comments_int = list(pd.DataFrame(comments_list)[0].apply(get_int))
+            
+            # 만약 6개 이하일 경우 부족한 수만큼 None값으로 채우기
             if len(views_int) < 6:
                 views_int = fill_none(views_int, 6)
                 likes_int = fill_none(likes_int, 6)
+                comments_int = fill_none(comments_int, 6)
                 post_url_list = fill_none(post_url_list, 6)
                 
             # bio에 적힌 정보를 토대로 추가 url or mail 수집
@@ -146,15 +153,15 @@ try:
             f_loc_cate = ', '.join(loc_cate) if len(loc_cate) else None
             f_con = '\n'.join(contact) if len(contact) else None
             
-            total_data.append(['틱톡', f_cate, f_loc_cate, channelid, username, tiktok_url, follower, sns_likes, bio, views_int[0], uploaded_date] + views_int[1:] + likes_int[1:] + post_url_list[1:] + ['\n'.join(extra_list), img_url, f_con])
+            total_data.append(['tiktok', f_cate, f_loc_cate, channelid, username, tiktok_url, following, follower, sns_likes, bio, views_int[0], uploaded_date] + views_int[1:] + likes_int[1:] + comments_int[1:] + post_url_list[1:] + ['\n'.join(extra_list), img_url, f_con])
         except:
             error_url_list.append(tiktok_url)
         # 수집한 데이터
         df = pd.DataFrame(total_data)
         df = convert_tiktok_all_data(df)
         # 삭제된 계정
-        del_df = pd.DataFrame(del_channelid, columns=['channelid'])
-        del_df.insert(1, 'delCheck', 'Y')
+        del_df = pd.DataFrame(del_channelid, columns=['mc_channelid'])
+        del_df.insert(1, 'mc_delCheck', 'Y')
         df = pd.concat([df, del_df])
         df.insert(len(df.columns), 'modDate', start)
         df.to_excel(file_path + 'file/tiktok_final_all_test.xlsx')
@@ -163,6 +170,8 @@ except Exception:
     ErrorLog(str(err), log_path+'Log_tiktok_total_data_error.txt')
     
 end = datetime.datetime.now()
+if error_url_list:
+    print(f'정상적으로 정보를 가져오지 못한 계정 :\n{", ".join(error_url_list)}')
 automessage = 'tiktok_total_auto.py start: '+str(start)+' end: '+str(end)
 AutoLog(str(automessage), log_path+'Log_tiktok_total_data.txt')
 

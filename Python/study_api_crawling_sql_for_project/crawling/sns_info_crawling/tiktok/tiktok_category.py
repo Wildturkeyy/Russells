@@ -1,6 +1,5 @@
 from __init import *
 from _common.log_util import *
-from _common.sql_util import connect_db
 from crawling.common.requests_util import *
 import pandas as pd
 import pymysql
@@ -12,9 +11,10 @@ start = datetime.datetime.now()
 print(start)
 
 ############################################################################################################################################################
-conn, cursor = connect_db()
+conn = pymysql.connect(host='production-reader-instance.c7oin7qwa7jr.ap-northeast-2.rds.amazonaws.com',user='dnmd-wowio', password='cosmos737!',charset='utf8mb4',db='dbwwworkdata')
+cur = conn.cursor()
 
-sql = "select idx, channelurl from db_name.table_name where condition ;"
+sql = "select idx, mc_channelurl from dbwwworkdata.TBL_MKT_CHANNEL_DATA where mc_channeltype = 'tiktok' and mc_delCheck = 'N';"
 df = pd.read_sql(sql,conn)
 
 conn.close()
