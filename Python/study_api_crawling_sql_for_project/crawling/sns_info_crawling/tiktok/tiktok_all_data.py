@@ -160,10 +160,10 @@ try:
         df = pd.DataFrame(total_data)
         df = convert_tiktok_all_data(df)
         # 삭제된 계정
-        del_df = pd.DataFrame(del_channelid, columns=['mc_channelid'])
-        del_df.insert(1, 'mc_delCheck', 'Y')
-        df = pd.concat([df, del_df])
-        df.insert(len(df.columns), 'modDate', start)
+        if del_channelid:
+            del_df = pd.DataFrame(del_channelid, columns=['mc_channelid'])
+            del_df.insert(1, 'mc_delCheck', 'Y')
+            df = pd.concat([df, del_df])
         df.to_excel(file_path + 'file/tiktok_final_all_test.xlsx')
 except Exception:
     err = traceback.format_exc()

@@ -92,29 +92,15 @@ try:
     # 수집한 전체 데이터
     df = convert_tiktok_data(pd.DataFrame(total_data))
     # 삭제된 데이터
-    del_df = pd.DataFrame(del_channelid, columns=['channelid'])
-    del_df.insert(1, 'delCheck', 'Y')
-    df = pd.concat([df, del_df])
-    df.insert(len(df.columns), 'modDate', start)
+    if del_channelid:
+        del_df = pd.DataFrame(del_channelid, columns=['channelid'])
+        del_df.insert(1, 'delCheck', 'Y')
+        df = pd.concat([df, del_df])
     ##
     df.to_excel(file_path+'file/tiktok_daily_data.xlsx')
     df_tup = list(df.itertuples(index=False, name=None))
 
-    # # db update
-    # ################-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    # conn = pymysql.connect(host='production-reader-instance.c7oin7qwa7jr.ap-northeast-2.rds.amazonaws.com',user='dnmd-wowio', password='cosmos737!',charset='utf8mb4',db='dbwwworkdata')
-    # cur = conn.cursor()
-    # sql = "update dbwwworkdata.TBL_MKT_CHANNEL_DATA set mc_postdate = %s, mc_view = %s, mc_like = %s where mc_channelid = %s and mc_channeltype = 'tiktok'"
-    # cur.executemany(sql,df_tup)
-    # conn.commit()
-    # conn.close()
 
-    # conn = pymysql.connect(host='qa-dnmd-aurora-database-1-instance-1.c7oin7qwa7jr.ap-northeast-2.rds.amazonaws.com',user='dnmd-wowio', password='cosmos737!',charset='utf8mb4',db='dbwwworkdata')
-    # cur = conn.cursor()
-    # sql = "update dbwwworkdata.TBL_MKT_CHANNEL_DATA set mc_postdate = %s, mc_view = %s, mc_like = %s where mc_channelid = %s and mc_channeltype = 'tiktok'"
-    # cur.executemany(sql,df_tup)
-    # conn.commit()
-    # conn.close()
 
 except Exception:
     err = traceback.format_exc()

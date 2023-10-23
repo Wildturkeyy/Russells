@@ -440,5 +440,5 @@ def convert_tiktok_data(df : pd.DataFrame):
     contents = [f'contents{i}' for i in range(1, 6)]
     df.columns = ['channelid', 'postdate', 'following', 'follower'] + view + like + comments + contents + ['delCheck']
     df['postdate'] = df['postdate'].apply(convert_date)
-    df['postdate'] = df['postdate'].apply(lambda x: 'N' if x > 60 else 'Y')
+    df['check'] = df['postdate'].apply(lambda x: 'N' if x > 60 else 'Y')
     return df
