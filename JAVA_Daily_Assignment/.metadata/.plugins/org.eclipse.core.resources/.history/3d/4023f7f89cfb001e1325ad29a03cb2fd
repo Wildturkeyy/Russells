@@ -1,0 +1,10 @@
+package day0416.ch04.ex4;
+
+public class FahCelConversionTest {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

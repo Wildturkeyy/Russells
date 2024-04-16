@@ -1,0 +1,15 @@
+package ex6;
+
+public class IntTypeCastingTest {
+
+	public static void main(String[] args) {
+
+		//정수의 타입을 강제로 변환하기
+		byte bVar1 = 12;
+		byte bVar2 = 17;
+//		byte bVar3 = bVar1 + bVar2; // 자바에서는 byte 타입끼리의 연산 결과는 int 타입으로 자동 변환됨.
+		byte bVar3 = (byte)(bVar1 + bVar2);
+		
+	}
+
+}
